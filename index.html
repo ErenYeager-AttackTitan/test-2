@@ -2,67 +2,53 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Auto Notifications</title>
+  <title>Anime Notifications</title>
   <style>
     body {
-      background: #121212;
+      background: #111;
       color: #fff;
       font-family: sans-serif;
       text-align: center;
-      padding-top: 100px;
+      margin-top: 100px;
     }
     button {
-      padding: 12px 24px;
+      padding: 10px 20px;
       font-size: 16px;
-      background: #e50914;
-      border: none;
+      background-color: #e50914;
       color: white;
-      cursor: pointer;
+      border: none;
       border-radius: 8px;
-      margin-top: 20px;
-    }
-    button:hover {
-      background: #c40610;
+      cursor: pointer;
     }
   </style>
 </head>
 <body>
-  <h1>Enable Notifications</h1>
-  <button onclick="requestPermission()">Allow</button>
+  <h1>Allow Anime Notifications</h1>
+  <button onclick="enableNotifications()">Enable</button>
 
   <script>
-    let lastTimestamp = null;
+    let lastScript = "";
 
-    function requestPermission() {
+    function enableNotifications() {
       Notification.requestPermission().then(permission => {
         if (permission === "granted") {
-          alert("Notifications enabled!");
-          startChecking();
+          setInterval(async () => {
+            try {
+              const res = await fetch("notify.js?ts=" + Date.now());
+              const script = await res.text();
+
+              if (script !== lastScript && script.trim() !== "") {
+                lastScript = script;
+                eval(script);
+              }
+            } catch (e) {
+              console.error("Error loading notify.js", e);
+            }
+          }, 2000);
         } else {
-          alert("Permission denied.");
+          alert("Notification permission denied.");
         }
       });
-    }
-
-    function startChecking() {
-      setInterval(async () => {
-        try {
-          const res = await fetch("notification.json?_=" + Date.now());
-          const data = await res.json();
-
-          if (data.timestamp !== lastTimestamp) {
-            lastTimestamp = data.timestamp;
-
-            new Notification(data.title, {
-              body: data.message,
-              icon: data.icon,
-              image: data.poster
-            });
-          }
-        } catch (err) {
-          console.error("Error fetching notification:", err);
-        }
-      }, 2000);
     }
   </script>
 </body>
