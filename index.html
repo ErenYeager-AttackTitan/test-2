@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Auto Notifications</title>
+  <style>
+    body {
+      background: #121212;
+      color: #fff;
+      font-family: sans-serif;
+      text-align: center;
+      padding-top: 100px;
+    }
+    button {
+      padding: 12px 24px;
+      font-size: 16px;
+      background: #e50914;
+      border: none;
+      color: white;
+      cursor: pointer;
+      border-radius: 8px;
+      margin-top: 20px;
+    }
+    button:hover {
+      background: #c40610;
+    }
+  </style>
+</head>
+<body>
+  <h1>Enable Notifications</h1>
+  <button onclick="requestPermission()">Allow</button>
+
+  <script>
+    let lastTimestamp = null;
+
+    function requestPermission() {
+      Notification.requestPermission().then(permission => {
+        if (permission === "granted") {
+          alert("Notifications enabled!");
+          startChecking();
+        } else {
+          alert("Permission denied.");
+        }
+      });
+    }
+
+    function startChecking() {
+      setInterval(async () => {
+        try {
+          const res = await fetch("notification.json?_=" + Date.now());
+          const data = await res.json();
+
+          if (data.timestamp !== lastTimestamp) {
+            lastTimestamp = data.timestamp;
+
+            new Notification(data.title, {
+              body: data.message,
+              icon: data.icon,
+              image: data.poster
+            });
+          }
+        } catch (err) {
+          console.error("Error fetching notification:", err);
+        }
+      }, 2000);
+    }
+  </script>
+</body>
+</html>
